@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 피부분석 - 촬영</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 402px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background-color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .time {
+            color: #000000;
+        }
+
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .wifi-icon, .battery-icon {
+            width: 18px;
+            height: 13px;
+            background-color: #000000;
+        }
+
+        .battery-text {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background-color: #ffffff;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-arrow {
+            width: 17px;
+            height: 24px;
+            background-color: #000000;
+            clip-path: polygon(0 0, 0 100%, 100% 50%);
+        }
+
+        .home-icon {
+            width: 27px;
+            height: 27px;
+            background-color: #000000;
+            border-radius: 4px;
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111111;
+            letter-spacing: -0.2px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            background-color: #000000;
+            border-radius: 4px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .instruction-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 20px;
+            letter-spacing: -0.2px;
+        }
+
+        /* Camera Container */
+        .camera-container {
+            position: relative;
+            width: 267px;
+            height: 373px;
+            margin: 0 auto 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 1px solid #999999;
+            background-color: #f5f5f5;
+        }
+
+        .camera-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .camera-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999999;
+            font-size: 14px;
+        }
+
+        .face-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 2px solid #19d7d2;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .face-overlay.active {
+            opacity: 1;
+        }
+
+        /* Selection Controls */
+        .selection-controls {
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333333;
+            margin-bottom: 8px;
+        }
+
+        .option-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .option-button {
+            padding: 10px 16px;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            background-color: #ffffff;
+            color: #666666;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-button:hover {
+            border-color: #19d7d2;
+            color: #19d7d2;
+        }
+
+        .option-button.selected {
+            background-color: #19d7d2;
+            color: #ffffff;
+            border-color: #19d7d2;
+        }
+
+        /* Capture Button */
+        .capture-button {
+            width: 100%;
+            max-width: 362px;
+            height: 43px;
+            background-color: #19d7d2;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .capture-button:hover {
+            background-color: #16c4bf;
+        }
+
+        .capture-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 402px;
+            background-color: #ffffff;
+            border-top: 1px solid #e8e8e8;
+        }
+
+        .nav-items {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .nav-item.active {
+            color: #19d7d2;
+        }
+
+        .nav-item:not(.active) {
+            color: #999999;
+        }
+
+        .nav-icon {
+            width: 28px;
+            height: 28px;
+            background-color: currentColor;
+            border-radius: 4px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .home-indicator {
+            width: 134px;
+            height: 5px;
+            background-color: #000000;
+            border-radius: 100px;
+            margin: 8px auto;
+        }
+
+        /* Hidden file input for camera access */
+        #camera-input {
+            display: none;
+        }
+
+        /* Loading state */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #19d7d2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 402px) {
+            .container {
+                max-width: 100%;
+            }
+            
+            .camera-container {
+                width: 250px;
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="time">09:41</div>
+            <div class="status-icons">
+                <div class="wifi-icon"></div>
+                <div class="battery-text">73</div>
+            </div>
+        </div>
+
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <div class="nav-left">
+                <div class="back-arrow"></div>
+                <div class="home-icon"></div>
+            </div>
+            <div class="nav-title">AI 피부분석</div>
+            <div class="nav-right">
+                <div class="nav-icon"></div>
+                <div class="nav-icon"></div>
+                <div class="nav-icon"></div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="instruction-text">얼굴을 화면에 맞춰주세요</h2>
+            
+            <!-- Camera Container -->
+            <div class="camera-container">
+                <video id="camera-preview" class="camera-preview" autoplay muted playsinline></video>
+                <div class="camera-placeholder" id="camera-placeholder">
+                    카메라를 시작하려면 촬영 버튼을 누르세요
+                </div>
+                <div class="face-overlay" id="face-overlay"></div>
+            </div>
+
+            <!-- Selection Controls -->
+            <div class="selection-controls">
+                <div class="control-group">
+                    <div class="control-label">성별</div>
+                    <div class="option-buttons">
+                        <button class="option-button" data-option="gender" data-value="female">여성</button>
+                        <button class="option-button" data-option="gender" data-value="male">남성</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">나이대</div>
+                    <div class="option-buttons">
+                        <button class="option-button" data-option="age" data-value="20s">20대</button>
+                        <button class="option-button" data-option="age" data-value="30s">30대</button>
+                        <button class="option-button" data-option="age" data-value="40s">40대</button>
+                        <button class="option-button" data-option="age" data-value="50s">50대</button>
+                        <button class="option-button" data-option="age" data-value="60s">60대</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Capture Button -->
+            <button class="capture-button" id="capture-button">촬영</button>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>AI가 피부를 분석하고 있습니다...</p>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-items">
+                <div class="nav-item">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">카테고리</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">혜택</div>
+                </div>
+                <div class="nav-item active">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">홈</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">쇼핑</div>
+                </div>
+                <div class="nav-item">
+                    <div class="nav-icon"></div>
+                    <div class="nav-label">마이</div>
+                </div>
+            </div>
+            <div class="home-indicator"></div>
+        </div>
+
+        <!-- Hidden file input for camera access -->
+        <input type="file" id="camera-input" accept="image/*" capture="user">
+    </div>
+
+    <script>
+        class AISkinPhotography {
+            constructor() {
+                this.selectedGender = null;
+                this.selectedAge = null;
+                this.stream = null;
+                this.isCapturing = false;
+                
+                this.initializeElements();
+                this.attachEventListeners();
+            }
+
+            initializeElements() {
+                this.cameraPreview = document.getElementById('camera-preview');
+                this.cameraPlaceholder = document.getElementById('camera-placeholder');
+                this.faceOverlay = document.getElementById('face-overlay');
+                this.captureButton = document.getElementById('capture-button');
+                this.loading = document.getElementById('loading');
+                this.cameraInput = document.getElementById('camera-input');
+            }
+
+            attachEventListeners() {
+                // Option button selection
+                document.querySelectorAll('.option-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        this.selectOption(e.target);
+                    });
+                });
+
+                // Capture button
+                this.captureButton.addEventListener('click', () => {
+                    this.handleCapture();
+                });
+
+                // Camera input change
+                this.cameraInput.addEventListener('change', (e) => {
+                    this.handleFileSelect(e);
+                });
+            }
+
+            selectOption(button) {
+                const option = button.dataset.option;
+                const value = button.dataset.value;
+
+                // Remove selected class from siblings
+                button.parentElement.querySelectorAll('.option-button').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+
+                // Add selected class to clicked button
+                button.classList.add('selected');
+
+                // Store selection
+                if (option === 'gender') {
+                    this.selectedGender = value;
+                } else if (option === 'age') {
+                    this.selectedAge = value;
+                }
+
+                this.updateCaptureButton();
+            }
+
+            updateCaptureButton() {
+                const canCapture = this.selectedGender && this.selectedAge;
+                this.captureButton.disabled = !canCapture;
+                
+                if (canCapture) {
+                    this.captureButton.textContent = '촬영';
+                } else {
+                    this.captureButton.textContent = '성별과 나이대를 선택해주세요';
+                }
+            }
+
+            async handleCapture() {
+                if (!this.selectedGender || !this.selectedAge) {
+                    alert('성별과 나이대를 모두 선택해주세요.');
+                    return;
+                }
+
+                try {
+                    // Request camera access
+                    this.stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: 'user',
+                            width: { ideal: 640 },
+                            height: { ideal: 480 }
+                        }
+                    });
+
+                    this.cameraPreview.srcObject = this.stream;
+                    this.cameraPreview.style.display = 'block';
+                    this.cameraPlaceholder.style.display = 'none';
+                    this.faceOverlay.classList.add('active');
+
+                    // Update button to capture mode
+                    this.captureButton.textContent = '사진 촬영';
+                    this.captureButton.onclick = () => this.capturePhoto();
+
+                } catch (error) {
+                    console.error('Camera access denied:', error);
+                    alert('카메라 접근이 거부되었습니다. 브라우저 설정에서 카메라 권한을 허용해주세요.');
+                }
+            }
+
+            capturePhoto() {
+                if (this.isCapturing) return;
+                
+                this.isCapturing = true;
+                this.captureButton.disabled = true;
+                this.captureButton.textContent = '촬영 중...';
+
+                // Create canvas to capture photo
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                canvas.width = this.cameraPreview.videoWidth;
+                canvas.height = this.cameraPreview.videoHeight;
+                
+                // Draw video frame to canvas
+                context.drawImage(this.cameraPreview, 0, 0, canvas.width, canvas.height);
+                
+                // Convert to blob and simulate AI analysis
+                canvas.toBlob((blob) => {
+                    this.simulateAIAnalysis(blob);
+                }, 'image/jpeg', 0.8);
+            }
+
+            simulateAIAnalysis(imageBlob) {
+                // Stop camera stream
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+
+                // Show loading state
+                this.showLoading();
+
+                // Simulate AI analysis delay
+                setTimeout(() => {
+                    this.hideLoading();
+                    this.showResults();
+                }, 3000);
+            }
+
+            showLoading() {
+                this.loading.style.display = 'block';
+                document.querySelector('.main-content').style.display = 'none';
+            }
+
+            hideLoading() {
+                this.loading.style.display = 'none';
+            }
+
+            showResults() {
+                // In a real application, this would redirect to results page
+                // or show results in a modal/overlay
+                alert(`AI 피부 분석이 완료되었습니다!\n\n선택된 정보:\n- 성별: ${this.selectedGender === 'female' ? '여성' : '남성'}\n- 나이대: ${this.selectedAge}대\n\n분석 결과 페이지로 이동합니다.`);
+                
+                // Reset for next use
+                this.resetInterface();
+            }
+
+            resetInterface() {
+                this.selectedGender = null;
+                this.selectedAge = null;
+                this.isCapturing = false;
+                
+                // Reset UI
+                document.querySelectorAll('.option-button').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                
+                this.cameraPreview.style.display = 'none';
+                this.cameraPlaceholder.style.display = 'flex';
+                this.faceOverlay.classList.remove('active');
+                
+                this.captureButton.disabled = false;
+                this.captureButton.textContent = '촬영';
+                this.captureButton.onclick = () => this.handleCapture();
+                
+                document.querySelector('.main-content').style.display = 'block';
+            }
+
+            handleFileSelect(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.cameraPreview.src = e.target.result;
+                        this.cameraPreview.style.display = 'block';
+                        this.cameraPlaceholder.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new AISkinPhotography();
+        });
+
+        // Handle page visibility change to stop camera when page is hidden
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && window.skinPhotography) {
+                if (window.skinPhotography.stream) {
+                    window.skinPhotography.stream.getTracks().forEach(track => track.stop());
+                }
+            }
+        });
+    </script>
+</body>
+</html>
